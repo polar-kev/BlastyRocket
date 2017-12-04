@@ -7,8 +7,8 @@ public class ObstaclePool : MonoBehaviour {
 	public GameObject obstacle;
 	public int obstaclePoolSize = 3;
 	public float spawnRate = 7f;
-	public float obstacleXBoundaryMin = -8f;
-	public float obstacleXBoundaryMax = 8f;
+	public float obstacleXBoundaryMin = -2.81f;
+	public float obstacleXBoundaryMax = 2.81f;
 	public float obstacleYBoundaryMin = 10.24f;
 	public float obstacleYBoundaryMax = 13.27f;
 
@@ -23,7 +23,7 @@ public class ObstaclePool : MonoBehaviour {
 		obstaclePool = new GameObject[obstaclePoolSize];
 
 		//Create object pool offscreen
-		objectPoolPosition = new Vector2 (25, 12);
+		objectPoolPosition = new Vector2 (6f, 3f);
 
 		for (int i = 0; i < obstaclePoolSize; i++) {
 			obstaclePool [i] = Instantiate (obstacle, objectPoolPosition, Quaternion.identity) as GameObject;

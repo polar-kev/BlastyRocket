@@ -11,28 +11,27 @@ public class GameController : MonoBehaviour {
 	public Text scoreText;
 	public GameObject gameOverTextObject;
 
-
 	public float startWait = 10.0f;
 	public float obstacleWait = 1.5f;
+	public float restartDelay = 0.8f;
 
-	public GameObject obstacle;
 	public GameObject baloon;
-	public Transform spawnLocation;
 
-	public float obstacleBoundaryMin = -1.0f;
-	public float obstacleBoundaryMax = 3.3f;
+	public Vector2 baloonBoundary;
+	public Vector2 obstacleBoundary;
 
 	public bool isGameOver;
 	public bool spawnObstacles;
 
 	public int score;
 
+	private AudioSource audioSource;
 	private float scrollVelocity = 0;
-	private int difficultyThreshold = 2;
-	private float obstacleWaitReduction = 0.1f;
+	//private int difficultyThreshold = 2;
 	private float randomizer;
 	private float minBaloonDistance = 3f;
 	private Vector2 oldBaloonPosition;
+	bool gameOverSoundPlayed;
 
 	//Game controller Singleton pattern
 	void Awake(){
@@ -45,6 +44,8 @@ public class GameController : MonoBehaviour {
 
 	//Initializations
 	void Start () {
+		audioSource = gameObject.GetComponent<AudioSource> ();
+
 		score = 0;
 		scoreText.text = "Score: 0";
 		gameOverTextObject.SetActive(false);
@@ -53,11 +54,12 @@ public class GameController : MonoBehaviour {
 		Vector2 baloonPosition = new Vector2 (0, 3.30f);
 		spawnBaloon (baloonPosition);
 		spawnObstacles = false;
+		gameOverSoundPlayed = false;
 	}
 	
 	// Update is called once per frame
 	void Update () {
-		if(isGameOver && Input.anyKeyDown){
+		if(isGameOver && Input.anyKeyDown && gameOverSoundPlayed){
 			SceneManager.LoadScene("BlastyRockey_Main");
 		}
 	}
@@ -65,7 +67,8 @@ public class GameController : MonoBehaviour {
 	public void PlayerDied(){
 		StopAllCoroutines ();
 		isGameOver = true;
-		gameOverTextObject.SetActive (true);
+		audioSource.Play ();
+		StartCoroutine ("RestartCountdown");
 	}
 
 	public void PlayerScored(){
@@ -76,20 +79,19 @@ public class GameController : MonoBehaviour {
 		score++;
 		scoreText.text = "Score: " + score.ToString();
 
-		spawnBaloon ();
-
-		//For Flappy bird game
-		//Incrementally increase difficulty by spawning obstacles sooner as the score inscreases
-		if(score > difficultyThreshold && score % difficultyThreshold == 0 && obstacleWait >= 0.7f){
-			obstacleWait -= obstacleWaitReduction;
+		/*Use this to increase difficulty
+		 * if(score != 0 && score%2 == 0){
+			scrollVelocity -= 1f;
 		}
+		*/
+		spawnBaloon ();
 	}
 
 	public void spawnBaloon(){
 		Vector2 newBaloonPosition;
-		//TODO create a variable for baloon position spawn parameters instead of hardcoding
+		//Make sure new baloon spawns away from the old baloon
 		do {
-			newBaloonPosition = new Vector2 (Random.Range (0, 8.2f) * -Mathf.Sign (oldBaloonPosition.x), Random.Range (-1f, 2f));
+			newBaloonPosition = new Vector2 (Random.Range (0, baloonBoundary.x) * -Mathf.Sign (oldBaloonPosition.x), Random.Range (-1f, baloonBoundary.y));
 		} while(Vector2.Distance(oldBaloonPosition,newBaloonPosition) <= minBaloonDistance);
 
 		Instantiate(baloon, new Vector3(newBaloonPosition.x, newBaloonPosition.y, 0), Quaternion.identity);
@@ -108,6 +110,12 @@ public class GameController : MonoBehaviour {
 
 	public void setScrollVelocity(float vel){
 		scrollVelocity = vel;
+	}
+
+	IEnumerator RestartCountdown(){
+		yield return new WaitForSeconds (restartDelay);
+		gameOverTextObject.SetActive (true);
+		gameOverSoundPlayed = true;
 	}
 		
 }

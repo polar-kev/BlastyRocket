@@ -7,35 +7,44 @@ public class PlayerController : MonoBehaviour {
 	public float upForce = 100f;							
 	public int score;
 	public float torque = 2.0f;
+	public float thrustRate = 2f;
 
-	public float boostRate = 2f;
+	public Transform upTransform;
 
+	public GameObject inputTextObject;
+
+	private AudioSource audioSource;
 	private Rigidbody2D rgbd;								
 	private Animator animator;	
 	private bool isDead;
 	private bool startedFlying;
-	private bool hasBoost;
-	private float timeTillnextBoost;
+	private bool hasThrust;
+	private float timeTillnextThrust;
 
-	// Use this for initialization
 	void OnEnable () {
 		rgbd = gameObject.GetComponent<Rigidbody2D> ();
 		animator = gameObject.GetComponentInChildren<Animator> ();
 
+		audioSource = gameObject.GetComponent<AudioSource> ();
+
 		startedFlying = false;
 		isDead = false;
-		hasBoost = true;
+		hasThrust = true;
 		score = 0;
 	}
 
-	void Update(){
-		if(!hasBoost){
-			timeTillnextBoost += Time.deltaTime;
-			if (timeTillnextBoost >= boostRate) {
-				hasBoost = true;
+	void FixedUpdate(){
+		if (!hasThrust) {
+			timeTillnextThrust += Time.deltaTime;
+			if (timeTillnextThrust >= thrustRate) {
+				hasThrust = true;
 			}
+		}else{
+			timeTillnextThrust = 0;
 		}
-				
+	}
+
+	void Update(){
 		if(!isDead){
 			//Get Input & move player
 			GetInputAndMove();
@@ -43,29 +52,34 @@ public class PlayerController : MonoBehaviour {
 	}
 		
 	void GetInputAndMove(){
-		if (Input.GetKeyDown (KeyCode.UpArrow)) {
+		if (hasThrust && Input.GetKeyDown (KeyCode.UpArrow)) {
 			rgbd.velocity = Vector2.zero;
 			animator.SetTrigger ("Rise");
 			rgbd.AddRelativeForce(new Vector2 (0,upForce));
+			audioSource.Play ();
 			startedFlying = true;
+			hasThrust = false;
+			inputTextObject.SetActive (false);
 		}
 		if (Input.GetKey (KeyCode.RightArrow) && startedFlying ) {
 			animator.SetTrigger ("Rise");
 			rgbd.AddTorque(-torque);
+			//rgbd.angularVelocity -= torque*50;
 
 		}
 		if (Input.GetKey (KeyCode.LeftArrow) && startedFlying) {
 			animator.SetTrigger ("Rise");
 			rgbd.AddTorque(torque);
+			//rgbd.angularVelocity += torque*50;
 		}
 		//TODO: Add special boost animation
 		//Boost
-		if (Input.GetKeyDown (KeyCode.Space) && startedFlying && hasBoost) {
+		if (Input.GetKeyDown (KeyCode.Space) && startedFlying && hasThrust) {
 			rgbd.velocity = Vector2.zero;
 			animator.SetTrigger ("Rise");
-			rgbd.AddRelativeForce(new Vector2 (0,upForce*2));
-			timeTillnextBoost = 0;
-			hasBoost = false;
+			//rgbd.AddRelativeForce(new Vector2 (0,upForce*2));
+			timeTillnextThrust = 0;
+			hasThrust = false;
 		}
 	}
 
