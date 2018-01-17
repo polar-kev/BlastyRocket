@@ -44,43 +44,85 @@ public class PlayerController : MonoBehaviour {
 		}
 	}
 
+
+
+	#if UNITY_WEBGL || UNITY_STANDALONE
 	void Update(){
 		if(!isDead){
 			//Get Input & move player
 			GetInputAndMove();
 		}
 	}
-		
+
 	void GetInputAndMove(){
+
+		//Check if playing on computer or in web player
 		if (hasThrust && Input.GetKeyDown (KeyCode.UpArrow)) {
-			rgbd.velocity = Vector2.zero;
-			animator.SetTrigger ("Rise");
-			rgbd.AddRelativeForce(new Vector2 (0,upForce));
-			audioSource.Play ();
-			startedFlying = true;
-			hasThrust = false;
-			inputTextObject.SetActive (false);
+			MoveRocketUp ();
 		}
 		if (Input.GetKey (KeyCode.RightArrow) && startedFlying ) {
-			animator.SetTrigger ("Rise");
-			rgbd.AddTorque(-torque);
-			//rgbd.angularVelocity -= torque*50;
-
+			RotateRocketRight ();
 		}
 		if (Input.GetKey (KeyCode.LeftArrow) && startedFlying) {
-			animator.SetTrigger ("Rise");
-			rgbd.AddTorque(torque);
-			//rgbd.angularVelocity += torque*50;
+			RotateRocketLeft ();
 		}
-		//TODO: Add special boost animation
+		/*TODO: Add special boost animation
 		//Boost
 		if (Input.GetKeyDown (KeyCode.Space) && startedFlying && hasThrust) {
-			rgbd.velocity = Vector2.zero;
-			animator.SetTrigger ("Rise");
-			//rgbd.AddRelativeForce(new Vector2 (0,upForce*2));
-			timeTillnextThrust = 0;
-			hasThrust = false;
-		}
+			
+			Currently not in use
+			BoostRocket ();
+
+		}*/
+	}
+
+	#elif UNITY_IOS || UNITY_ANDROID
+
+	public void ThrustButton(){
+		if(!isDead)
+			MoveRocketUp();
+	}
+
+	public void LeftButton(){
+		if(!isDead)
+			RotateRocketLeft();
+	}
+
+	public void RightButton(){
+		if(!isDead)
+			RotateRocketRight();
+	}
+	#endif
+
+
+
+
+	void MoveRocketUp(){
+		rgbd.velocity = Vector2.zero;
+		animator.SetTrigger ("Rise");
+		rgbd.AddRelativeForce(new Vector2 (0,upForce));
+		audioSource.Play ();
+		startedFlying = true;
+		hasThrust = false;
+		inputTextObject.SetActive (false);
+	}
+
+	void RotateRocketRight(){
+		animator.SetTrigger ("Rise");
+		rgbd.AddTorque(-torque);
+	}
+
+	void RotateRocketLeft(){
+		animator.SetTrigger ("Rise");
+		rgbd.AddTorque(torque);
+	}
+
+	void BoostRocket(){
+		rgbd.velocity = Vector2.zero;
+		animator.SetTrigger ("Rise");
+		//rgbd.AddRelativeForce(new Vector2 (0,upForce*2));
+		timeTillnextThrust = 0;
+		hasThrust = false;
 	}
 
 	//Check collisions. Baloon collision handled in BaloonController
